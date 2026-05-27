@@ -171,6 +171,16 @@ body::after{
   transition:color 0.2s;
 }
 .c-line:hover{color:rgba(245,200,0,0.75);}
+.c-line.hidden{display:none;}
+/* Toggle switch */
+.p-toggle-row{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.p-toggle-label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.15em;color:rgba(240,242,255,0.35);text-transform:uppercase;}
+.tog{position:relative;width:36px;height:20px;flex-shrink:0;}
+.tog input{opacity:0;width:0;height:0;}
+.tog-slider{position:absolute;inset:0;background:rgba(255,255,255,0.1);border:1px solid rgba(245,200,0,0.2);border-radius:20px;cursor:pointer;transition:all 0.25s;}
+.tog-slider::before{content:'';position:absolute;height:14px;width:14px;left:2px;top:2px;background:rgba(240,242,255,0.4);border-radius:50%;transition:all 0.25s;}
+.tog input:checked+.tog-slider{background:rgba(245,200,0,0.2);border-color:rgba(245,200,0,0.5);}
+.tog input:checked+.tog-slider::before{transform:translateX(16px);background:#F5C800;}
 .card-bottom-row{
   display:flex;justify-content:space-between;align-items:flex-end;
   margin-top:10px;
@@ -344,6 +354,8 @@ body::after{
             <a class="c-line" id="fc-x"     href="https://x.com/KanaWorks_AI"        target="_blank" rel="noopener">X  @KanaWorks_AI</a>
             <a class="c-line" id="fc-web"   href="https://tokyoaivisuals.com"         target="_blank" rel="noopener">⊕  tokyoaivisuals.com</a>
             <a class="c-line" id="fc-email" href="mailto:kanaworksai@gmail.com">✉  kanaworksai@gmail.com</a>
+            <a class="c-line hidden" id="fc-phone" href="tel:">📞  </a>
+            <div class="c-line hidden" id="fc-addr">📍  </div>
           </div>
           <div class="card-qr-wrap" id="qr-wrap"></div>
         </div>
@@ -415,6 +427,32 @@ body::after{
     <span class="p-label">Email</span>
     <input class="p-input" id="pi-email" type="email" value="kanaworksai@gmail.com" placeholder="you@email.com">
   </div>
+  <div class="p-group">
+    <span class="p-label">Background Color</span>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <input type="color" id="pi-bg" value="#09090F"
+        style="width:44px;height:32px;border:1px solid rgba(245,200,0,0.25);border-radius:6px;background:none;cursor:pointer;padding:2px;">
+      <input class="p-input" id="pi-bg-hex" type="text" value="#09090F" placeholder="#09090F"
+        style="flex:1;font-family:'Space Mono',monospace;font-size:11px;">
+    </div>
+  </div>
+
+  <div class="p-group">
+    <div class="p-toggle-row">
+      <span class="p-toggle-label">Phone</span>
+      <label class="tog"><input type="checkbox" id="tog-phone"><span class="tog-slider"></span></label>
+    </div>
+    <input class="p-input" id="pi-phone" type="tel" value="" placeholder="+1 234 567 8900" style="margin-top:6px;">
+  </div>
+
+  <div class="p-group">
+    <div class="p-toggle-row">
+      <span class="p-toggle-label">Address</span>
+      <label class="tog"><input type="checkbox" id="tog-addr"><span class="tog-slider"></span></label>
+    </div>
+    <input class="p-input" id="pi-addr" type="text" value="" placeholder="City, Country" style="margin-top:6px;">
+  </div>
+
   <div class="p-hint">
     // Double-click card to flip.<br><br>
     // Drag hard &amp; release for<br>
@@ -489,6 +527,46 @@ syncLink('pi-x',     'fc-x',     'X  ', 'x');
 syncLink('pi-web',   'fc-web',   '⊕  ', 'web');
 syncLink('pi-email', 'fc-email', '✉  ', 'mailto:');
 
+// Background color
+const piBg    = document.getElementById('pi-bg');
+const piBgHex = document.getElementById('pi-bg-hex');
+function applyBg(hex) {
+  document.body.style.background = hex;
+  // also update the radial glow overlay color via a style tag
+}
+piBg.addEventListener('input', function() {
+  piBgHex.value = this.value;
+  applyBg(this.value);
+});
+piBgHex.addEventListener('input', function() {
+  const v = this.value.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(v)) { piBg.value = v; applyBg(v); }
+});
+
+// Phone toggle
+const togPhone  = document.getElementById('tog-phone');
+const piPhone   = document.getElementById('pi-phone');
+const fcPhone   = document.getElementById('fc-phone');
+togPhone.addEventListener('change', function() {
+  fcPhone.classList.toggle('hidden', !this.checked);
+});
+piPhone.addEventListener('input', function() {
+  const v = this.value.trim();
+  fcPhone.textContent = '📞  ' + v;
+  fcPhone.href = 'tel:' + v.replace(/\s/g,'');
+});
+
+// Address toggle
+const togAddr = document.getElementById('tog-addr');
+const piAddr  = document.getElementById('pi-addr');
+const fcAddr  = document.getElementById('fc-addr');
+togAddr.addEventListener('change', function() {
+  fcAddr.classList.toggle('hidden', !this.checked);
+});
+piAddr.addEventListener('input', function() {
+  fcAddr.textContent = '📍  ' + this.value.trim();
+});
+
 // Prevent drag when clicking links
 document.querySelectorAll('.c-line').forEach(a => {
   a.addEventListener('mousedown', e => e.stopPropagation());
@@ -530,6 +608,7 @@ function flipCard(){isFlipped=!isFlipped;flipDeg=isFlipped?180:0;}
 function onDown(e){
   if(e.target.isContentEditable||e.target.closest('[contenteditable]')) return;
   isDragging=true; badgeCard.classList.add('dragging');
+  playGrab();
   const p=pxy(e); dragOX=p.x-px; dragOY=p.y-py;
   const h=document.getElementById('drag-hint'); if(h) h.style.opacity='0';
 }
@@ -538,7 +617,13 @@ function onMove(e){
   if(e.preventDefault) e.preventDefault();
   const p=pxy(e); mouseRX=p.x-dragOX; mouseRY=p.y-dragOY;
 }
-function onUp(){if(!isDragging) return; isDragging=false; badgeCard.classList.remove('dragging');}
+function onUp(){
+  if(!isDragging) return;
+  isDragging=false;
+  badgeCard.classList.remove('dragging');
+  const spd = Math.sqrt(vx*vx + vy*vy);
+  playRelease(spd);
+}
 
 // Physics constants — slightly snappier spring, realistic damping
 const SPRING_K=0.030, DAMP=0.88, M_SPRING=0.15, M_DAMP=0.70;
@@ -594,6 +679,105 @@ function updateStrap(bx,by){
 window.addEventListener('resize',()=>{AX=window.innerWidth/2; HANG=getHang();});
 vx=-2;
 requestAnimationFrame(t=>{lastT=t; requestAnimationFrame(step);});
+
+// ════════════════════════════════════════
+//  AUDIO ENGINE (Web Audio API)
+// ════════════════════════════════════════
+let _ac = null;
+function AC() {
+  if (!_ac) _ac = new (window.AudioContext || window.webkitAudioContext)();
+  if (_ac.state === 'suspended') _ac.resume();
+  return _ac;
+}
+
+// 抓住：金属咔哒声（短脉冲噪声 + 高频滤波）
+function playGrab() {
+  try {
+    const ac = AC(), t = ac.currentTime;
+    // 噪声层
+    const len = Math.floor(ac.sampleRate * 0.06);
+    const buf = ac.createBuffer(1, len, ac.sampleRate);
+    const d   = buf.getChannelData(0);
+    for (let i = 0; i < len; i++)
+      d[i] = (Math.random()*2-1) * Math.pow(1 - i/len, 4);
+
+    const src  = ac.createBufferSource();
+    src.buffer = buf;
+
+    const bp   = ac.createBiquadFilter();
+    bp.type    = 'bandpass';
+    bp.frequency.value = 3200;
+    bp.Q.value = 3;
+
+    const gain = ac.createGain();
+    gain.gain.setValueAtTime(0.55, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+
+    // 金属高频 ping
+    const osc  = ac.createOscillator();
+    osc.type   = 'sine';
+    osc.frequency.setValueAtTime(2400, t);
+    osc.frequency.exponentialRampToValueAtTime(1200, t + 0.08);
+    const og   = ac.createGain();
+    og.gain.setValueAtTime(0.18, t);
+    og.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+
+    src.connect(bp); bp.connect(gain); gain.connect(ac.destination);
+    osc.connect(og); og.connect(ac.destination);
+    src.start(t); osc.start(t); osc.stop(t+0.12);
+  } catch(e){}
+}
+
+// 松手：弹簧 boing（力道越大，声音越饱满）
+function playRelease(speed) {
+  try {
+    if (speed < 1.5) return;           // 轻放不响
+    const ac   = AC(), t = ac.currentTime;
+    const inten = Math.min(speed / 18, 1);   // 0-1
+    const dur   = 0.6 + inten * 0.9;
+
+    // 主弹簧振荡
+    const baseF = 120 + inten * 160;
+    const osc   = ac.createOscillator();
+    osc.type    = 'sine';
+    // 频率曲线：冲高→落下→小幅震荡→静止
+    osc.frequency.setValueAtTime(baseF * 2.8, t);
+    osc.frequency.exponentialRampToValueAtTime(baseF,       t + 0.18);
+    osc.frequency.linearRampToValueAtTime(baseF * 1.35,     t + 0.38);
+    osc.frequency.exponentialRampToValueAtTime(baseF,       t + 0.55);
+    osc.frequency.linearRampToValueAtTime(baseF * 1.12,     t + 0.72);
+    osc.frequency.exponentialRampToValueAtTime(baseF,       t + 0.90);
+
+    const g1 = ac.createGain();
+    g1.gain.setValueAtTime(inten * 0.45, t);
+    g1.gain.exponentialRampToValueAtTime(0.001, t + dur);
+
+    // 谐波层（亮度）
+    const osc2  = ac.createOscillator();
+    osc2.type   = 'triangle';
+    osc2.frequency.setValueAtTime(baseF * 5, t);
+    osc2.frequency.exponentialRampToValueAtTime(baseF * 2, t + 0.15);
+    const g2 = ac.createGain();
+    g2.gain.setValueAtTime(inten * 0.18, t);
+    g2.gain.exponentialRampToValueAtTime(0.001, t + 0.22);
+
+    // 低频 thump（冲击感）
+    const osc3  = ac.createOscillator();
+    osc3.type   = 'sine';
+    osc3.frequency.setValueAtTime(55, t);
+    osc3.frequency.exponentialRampToValueAtTime(30, t + 0.12);
+    const g3 = ac.createGain();
+    g3.gain.setValueAtTime(inten * 0.5, t);
+    g3.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+
+    osc.connect(g1);  g1.connect(ac.destination);
+    osc2.connect(g2); g2.connect(ac.destination);
+    osc3.connect(g3); g3.connect(ac.destination);
+    osc.start(t);  osc.stop(t + dur);
+    osc2.start(t); osc2.stop(t + 0.25);
+    osc3.start(t); osc3.stop(t + 0.20);
+  } catch(e){}
+}
 </script>
 </body>
 </html>
