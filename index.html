@@ -408,6 +408,10 @@ body::after{
     <input class="p-input" id="pi-tag" type="text" value="// KANAWORKS_AI">
   </div>
   <div class="p-group">
+    <span class="p-label">Strap Text</span>
+    <input class="p-input" id="pi-strap" type="text" value="KANAWORKS AI" placeholder="绑带上的文字">
+  </div>
+  <div class="p-group">
     <span class="p-label">Name</span>
     <input class="p-input" id="pi-name" type="text" value="KANA">
   </div>
@@ -505,6 +509,13 @@ function togglePanel(){
   b.textContent=p.classList.contains('open')?'CLOSE ✕':'EDIT ▸';
 }
 document.getElementById('pi-tag').addEventListener('input',function(){document.getElementById('fc-tag').textContent=this.value;});
+
+// Strap text sync
+document.getElementById('pi-strap').addEventListener('input', function() {
+  const v = this.value.trim() || 'KANAWORKS AI';
+  const repeat = (v + ' • ').repeat(6);
+  document.getElementById('sp-text').textContent = repeat;
+});
 document.getElementById('pi-sub').addEventListener('input',function(){document.getElementById('fc-sub').textContent=this.value;});
 document.getElementById('pi-name').addEventListener('input',function(){
   const v=this.value||'KANA';
